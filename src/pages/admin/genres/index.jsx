@@ -16,6 +16,7 @@ export default function AdminGenres() {
       );
 
       setGenres(response.data.data);
+      setError("");
     } catch (error) {
       setError("Gagal mengambil data genre.");
       console.error(error);
@@ -27,6 +28,34 @@ export default function AdminGenres() {
   useEffect(() => {
     fetchGenres();
   }, []);
+
+  // Fungsi Hapus Genre
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Apakah kamu yakin ingin menghapus genre ini?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(
+        `http://127.0.0.1:8000/api/genres/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      alert("Genre berhasil dihapus!");
+      fetchGenres();
+    } catch (error) {
+      console.error(error);
+      alert(
+        error.response?.data?.message || "Gagal menghapus genre."
+      );
+    }
+  };
 
   return (
     <section className="bg-gray-50 p-3 sm:p-5">
@@ -87,6 +116,7 @@ export default function AdminGenres() {
                     <th className="px-5 py-3">No</th>
                     <th className="px-5 py-3">Nama Genre</th>
                     <th className="px-5 py-3">Deskripsi</th>
+                    <th className="px-5 py-3">Aksi</th>
                   </tr>
                 </thead>
 
@@ -106,6 +136,27 @@ export default function AdminGenres() {
 
                       <td className="px-5 py-4">
                         {genre.description || "-"}
+                      </td>
+
+                      {/* Action Buttons */}
+                      <td className="px-5 py-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() =>
+                              navigate(`/admin/genres/edit/${genre.id}`)
+                            }
+                            className="bg-yellow-500 text-white px-3 py-1.5 rounded hover:bg-yellow-600"
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            onClick={() => handleDelete(genre.id)}
+                            className="bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700"
+                          >
+                            Hapus
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

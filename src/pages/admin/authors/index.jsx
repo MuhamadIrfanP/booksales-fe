@@ -9,6 +9,7 @@ export default function AdminAuthors() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Mengambil data author
   const fetchAuthors = async () => {
     try {
       const response = await axios.get(
@@ -16,6 +17,7 @@ export default function AdminAuthors() {
       );
 
       setAuthors(response.data.data);
+      setError("");
     } catch (error) {
       setError("Gagal mengambil data author.");
       console.error(error);
@@ -28,6 +30,34 @@ export default function AdminAuthors() {
     fetchAuthors();
   }, []);
 
+  // Menghapus author
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Apakah kamu yakin ingin menghapus author ini?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(
+        `http://127.0.0.1:8000/api/authors/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      alert("Author berhasil dihapus!");
+      fetchAuthors();
+    } catch (error) {
+      console.error(error);
+      alert(
+        error.response?.data?.message || "Gagal menghapus author."
+      );
+    }
+  };
+
   return (
     <section className="bg-gray-50 p-3 sm:p-5">
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -37,6 +67,7 @@ export default function AdminAuthors() {
           <h1 className="text-xl font-semibold text-gray-900">
             Data Author
           </h1>
+
           <p className="text-sm text-gray-500 mt-1">
             Daftar penulis buku pada Book Sales.
           </p>
@@ -50,6 +81,7 @@ export default function AdminAuthors() {
               <h2 className="font-medium text-gray-700">
                 Daftar Author
               </h2>
+
               <p className="text-sm text-gray-500">
                 Total: {authors.length} author
               </p>
@@ -83,6 +115,7 @@ export default function AdminAuthors() {
                     <th className="px-5 py-3">Nama Author</th>
                     <th className="px-5 py-3">Foto</th>
                     <th className="px-5 py-3">Biografi</th>
+                    <th className="px-5 py-3">Aksi</th>
                   </tr>
                 </thead>
 
@@ -106,6 +139,27 @@ export default function AdminAuthors() {
 
                       <td className="px-5 py-4">
                         {author.bio || "-"}
+                      </td>
+
+                      {/* Action Buttons */}
+                      <td className="px-5 py-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() =>
+                              navigate(`/admin/authors/edit/${author.id}`)
+                            }
+                            className="bg-yellow-500 text-white px-3 py-1.5 rounded hover:bg-yellow-600"
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            onClick={() => handleDelete(author.id)}
+                            className="bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700"
+                          >
+                            Hapus
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
