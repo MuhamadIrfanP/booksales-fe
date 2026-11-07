@@ -1,148 +1,322 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 export default function BookCreate() {
+  const navigate = useNavigate();
+
+  const API_URL = "http://127.0.0.1:8000/api";
+
+  const [genres, setGenres] = useState([]);
+  const [authors, setAuthors] = useState([]);
+
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    price: "",
+    stock: "",
+    genre_id: "",
+    author_id: "",
+  });
+
+  const [coverPhoto, setCoverPhoto] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Mengambil data genre dan penulis
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [genreResponse, authorResponse] = await Promise.all([
+          fetch(`${API_URL}/genres`),
+          fetch(`${API_URL}/authors`),
+        ]);
+
+        const genreResult = await genreResponse.json();
+        const authorResult = await authorResponse.json();
+
+        if (genreResponse.ok) {
+          setGenres(genreResult.data || []);
+        }
+
+        if (authorResponse.ok) {
+          setAuthors(authorResult.data || []);
+        }
+      } catch (err) {
+        setError("Gagal mengambil data genre dan penulis.");
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Mengisi form
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  // Memilih gambar
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    setCoverPhoto(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
+  // Menyimpan buku
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setError("");
+
+    if (!coverPhoto) {
+      setError("Silakan pilih gambar sampul buku.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setError("Token login tidak ditemukan. Silakan login kembali.");
+      return;
+    }
+
+    const data = new FormData();
+
+    data.append("title", formData.title);
+    data.append("description", formData.description);
+    data.append("price", formData.price);
+    data.append("stock", formData.stock);
+    data.append("genre_id", formData.genre_id);
+    data.append("author_id", formData.author_id);
+    data.append("cover_photo", coverPhoto);
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${API_URL}/books`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: data,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (result.errors) {
+          const messages = Object.values(result.errors).flat();
+          throw new Error(messages.join("\n"));
+        }
+
+        throw new Error(result.message || "Gagal menambahkan buku.");
+      }
+
+      alert("Buku berhasil ditambahkan!");
+
+      navigate("/admin/books");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <>
-      <section className="bg-white dark:bg-gray-900">
-        <div className="max-w-2xl px-4 py-8 mx-auto lg:py-16">
-          <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-            Update product
-          </h2>
-          <form action="#">
-            <div className="grid gap-4 mb-4 sm:grid-cols-2 sm:gap-6 sm:mb-5">
-              <div className="sm:col-span-2">
-                <label
-                  for="name"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Product Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-600 focus:border-indigo-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-                  value="Apple iMac 27&ldquo;"
-                  placeholder="Type product name"
-                  required=""
-                />
-              </div>
-              <div className="w-full">
-                <label
-                  for="brand"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Brand
-                </label>
-                <input
-                  type="text"
-                  name="brand"
-                  id="brand"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-600 focus:border-indigo-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-                  value="Apple"
-                  placeholder="Product brand"
-                  required=""
-                />
-              </div>
-              <div className="w-full">
-                <label
-                  for="price"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Price
-                </label>
-                <input
-                  type="number"
-                  name="price"
-                  id="price"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-600 focus:border-indigo-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-                  value="2999"
-                  placeholder="$299"
-                  required=""
-                />
-              </div>
-              <div>
-                <label
-                  for="category"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Category
-                </label>
-                <select
-                  id="category"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-                >
-                  <option selected="">Electronics</option>
-                  <option value="TV">TV/Monitors</option>
-                  <option value="PC">PC</option>
-                  <option value="GA">Gaming/Console</option>
-                  <option value="PH">Phones</option>
-                </select>
-              </div>
-              <div>
-                <label
-                  for="item-weight"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Item Weight (kg)
-                </label>
-                <input
-                  type="number"
-                  name="item-weight"
-                  id="item-weight"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-600 focus:border-indigo-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-                  value="15"
-                  placeholder="Ex. 12"
-                  required=""
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label
-                  for="description"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  rows="8"
-                  className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-                  placeholder="Write a product description here..."
-                >
-                  Standard glass, 3.8GHz 8-core 10th-generation Intel Core i7
-                  processor, Turbo Boost up to 5.0GHz, 16GB 2666MHz DDR4 memory,
-                  Radeon Pro 5500 XT with 8GB of GDDR6 memory, 256GB SSD
-                  storage, Gigabit Ethernet, Magic Mouse 2, Magic Keyboard - US
-                </textarea>
-              </div>
+    <section className="bg-white dark:bg-gray-900">
+      <div className="max-w-2xl px-4 py-8 mx-auto lg:py-16">
+        <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+          Tambah Buku
+        </h2>
+
+        {error && (
+          <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg whitespace-pre-line">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 mb-4 sm:grid-cols-2 sm:gap-6 sm:mb-5">
+
+            {/* Judul */}
+            <div className="sm:col-span-2">
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Judul Buku
+              </label>
+
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                placeholder="Masukkan judul buku"
+                required
+              />
             </div>
-            <div className="flex items-center space-x-4">
-              <button
-                type="submit"
-                className="text-white bg-indigo-700 hover:bg-indigo-800 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800"
-              >
-                Update product
-              </button>
-              <button
-                type="button"
-                className="text-red-600 inline-flex items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900"
-              >
-                <svg
-                  className="w-5 h-5 mr-1 -ml-1"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                    clip-rule="evenodd"
-                  ></path>
-                </svg>
-                Delete
-              </button>
+
+            {/* Harga */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Harga (Rp)
+              </label>
+
+              <input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                min="0"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                placeholder="Contoh: 85000"
+                required
+              />
             </div>
-          </form>
-        </div>
-      </section>
-    </>
+
+            {/* Stok */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Stok
+              </label>
+
+              <input
+                type="number"
+                name="stock"
+                value={formData.stock}
+                onChange={handleChange}
+                min="0"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                placeholder="Jumlah stok"
+                required
+              />
+            </div>
+
+            {/* Genre */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Genre
+              </label>
+
+              <select
+                name="genre_id"
+                value={formData.genre_id}
+                onChange={handleChange}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                required
+              >
+                <option value="">Pilih Genre</option>
+
+                {genres.map((genre) => (
+                  <option key={genre.id} value={genre.id}>
+                    {genre.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Penulis */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Penulis
+              </label>
+
+              <select
+                name="author_id"
+                value={formData.author_id}
+                onChange={handleChange}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                required
+              >
+                <option value="">Pilih Penulis</option>
+
+                {authors.map((author) => (
+                  <option key={author.id} value={author.id}>
+                    {author.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Deskripsi */}
+            <div className="sm:col-span-2">
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Deskripsi Buku
+              </label>
+
+              <textarea
+                name="description"
+                rows="5"
+                value={formData.description}
+                onChange={handleChange}
+                className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300"
+                placeholder="Masukkan deskripsi buku"
+                required
+              />
+            </div>
+
+            {/* Upload Gambar */}
+            <div className="sm:col-span-2">
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Gambar Sampul Buku
+              </label>
+
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImageChange}
+                className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 p-2.5"
+                required
+              />
+
+              <p className="mt-1 text-xs text-gray-500">
+                Format JPG, JPEG, PNG, atau WEBP. Maksimal 2 MB.
+              </p>
+
+              {preview && (
+                <div className="mt-4">
+                  <p className="mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Preview Gambar:
+                  </p>
+
+                  <img
+                    src={preview}
+                    alt="Preview sampul buku"
+                    className="w-40 h-56 object-cover rounded-lg border"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Tombol */}
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="text-white bg-indigo-700 hover:bg-indigo-800 font-medium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50"
+            >
+              {loading ? "Menyimpan..." : "Simpan Buku"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate("/admin/books")}
+              className="text-gray-700 border border-gray-300 hover:bg-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
+            >
+              Batal
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
   );
 }
