@@ -1,23 +1,17 @@
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const token = localStorage.getItem("token");
 
-  let user = null;
-
-  try {
-    user = JSON.parse(localStorage.getItem("user"));
-  } catch {
-    user = null;
-  }
-
   // Proteksi halaman Admin
-  if (!token || !user) {
+  if (!user || !token) {
     return <Navigate to="/login" replace />;
   }
 
@@ -41,11 +35,10 @@ export default function AdminLayout() {
     } catch (error) {
       console.error("Logout API:", error);
     } finally {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      logout();
 
       alert("Logout berhasil!");
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   };
 
@@ -119,7 +112,6 @@ export default function AdminLayout() {
           <div className="overflow-y-auto py-5 px-3 h-full bg-white dark:bg-gray-800">
 
             <ul className="space-y-2">
-
               <li>
                 <a
                   href="/admin"
@@ -158,7 +150,6 @@ export default function AdminLayout() {
             </ul>
 
             <ul className="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
-
               <li>
                 <a
                   href="/admin/books"
@@ -185,7 +176,6 @@ export default function AdminLayout() {
                   <span className="ml-3">Help</span>
                 </a>
               </li>
-
             </ul>
           </div>
         </aside>

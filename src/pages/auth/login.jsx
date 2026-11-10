@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,16 +26,12 @@ export default function Login() {
         }
       );
 
-      // Simpan token dan data pengguna
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem(
-        "user",
-        JSON.stringify(response.data.user)
-      );
+      // Simpan token dan data pengguna melalui AuthContext
+      login(response.data.token, response.data.user);
 
       alert("Login berhasil!");
 
-      // Arahkan pengguna berdasarkan role
+      // Arahkan berdasarkan role pengguna
       if (response.data.user.role === "admin") {
         navigate("/admin");
       } else {

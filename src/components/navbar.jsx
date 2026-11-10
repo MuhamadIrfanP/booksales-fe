@@ -1,21 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Navbar() {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Ambil data pengguna dari localStorage
-  const getUser = () => {
-    try {
-      return JSON.parse(localStorage.getItem("user"));
-    } catch {
-      return null;
-    }
-  };
-
-  const user = getUser();
+  // Ambil data pengguna dan fungsi logout dari AuthContext
+  const { user, logout } = useAuth();
   const token = localStorage.getItem("token");
 
   const handleLogout = async () => {
@@ -33,12 +26,11 @@ export default function Navbar() {
     } catch (error) {
       console.error("Logout API:", error);
     } finally {
-      // Hapus data login
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      // Hapus data login melalui AuthContext
+      logout();
 
       alert("Logout berhasil!");
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   };
 
@@ -135,7 +127,9 @@ export default function Navbar() {
 
           {/* Menu Navigasi */}
           <div
-            className={`${isMenuOpen ? "block" : "hidden"} justify-between items-center w-full lg:flex lg:w-auto lg:order-1`}
+            className={`${
+              isMenuOpen ? "block" : "hidden"
+            } justify-between items-center w-full lg:flex lg:w-auto lg:order-1`}
           >
             <ul className="flex flex-col mt-4 font-medium lg:flex-row lg:space-x-8 lg:mt-0">
               <li>

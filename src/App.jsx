@@ -22,6 +22,9 @@ import CreateBook from "./pages/admin/books/create";
 
 import Home from "./pages/public";
 
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
+
 function App() {
   return (
     <BrowserRouter>
@@ -32,27 +35,34 @@ function App() {
           <Route path="/books" element={<Books />} />
         </Route>
 
-        {/* Halaman Login dan Register */}
+        {/* Login dan Register */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Halaman Admin */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Dashboard />} />
+        {/* Halaman khusus pengguna yang sudah login */}
+        <Route element={<ProtectedRoute />}>
+          {/* Halaman profil bisa ditambahkan di sini */}
+        </Route>
 
-          {/* Genre */}
-          <Route path="genres" element={<AdminGenres />} />
-          <Route path="genres/create" element={<CreateGenre />} />
-          <Route path="genres/edit/:id" element={<EditGenre />} />
+        {/* Halaman khusus Admin */}
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
 
-          {/* Author */}
-          <Route path="authors" element={<AdminAuthors />} />
-          <Route path="authors/create" element={<CreateAuthor />} />
-          <Route path="authors/edit/:id" element={<EditAuthor />} />
+            {/* Genre */}
+            <Route path="genres" element={<AdminGenres />} />
+            <Route path="genres/create" element={<CreateGenre />} />
+            <Route path="genres/edit/:id" element={<EditGenre />} />
 
-          {/* Book */}
-          <Route path="books" element={<AdminBooks />} />
-          <Route path="books/create" element={<CreateBook />} />
+            {/* Author */}
+            <Route path="authors" element={<AdminAuthors />} />
+            <Route path="authors/create" element={<CreateAuthor />} />
+            <Route path="authors/edit/:id" element={<EditAuthor />} />
+
+            {/* Book */}
+            <Route path="books" element={<AdminBooks />} />
+            <Route path="books/create" element={<CreateBook />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>
